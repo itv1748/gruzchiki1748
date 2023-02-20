@@ -1,4 +1,6 @@
 bool start=false;
+bool swap=false;
+bool skan=false;
 String b="";
 int out[9];
 int c1=0;
@@ -82,59 +84,63 @@ void loop() {
     duration = pulseIn(Echo, HIGH);
     mm=duration*0.001*340*0.5;
     delay(100);
-    if (mm<70)
+    Serial.println(mm);
+    Serial.println(Lt);
+    skan=mm<70;
+    if (skan and (Lt<15) and !(swap))
     {
       analogWrite(Sp,0);
       Lt++;
+      Serial.println();
       digitalWrite(pinS2,1);
       digitalWrite(pinS3,1);
       freq = pulseIn(pinOut, 0);
       delay(150);
+      Serial.print("R=");Serial.print(freq);
       R=freq;
       digitalWrite(pinS2,0);
       digitalWrite(pinS3,1);
       freq = pulseIn(pinOut, 0);
       delay(150);
+      Serial.print("G=");Serial.print(freq);
       G=freq;
       digitalWrite(pinS2,0);
       digitalWrite(pinS3,0);
       freq = pulseIn(pinOut, 0);
+      Serial.print("B=");Serial.print(freq);
       delay(150);
       B=freq;
       int c;
       for (c=0;c<2;c++)
       {
-        if ((abs(out[c*3+1]-R)<10) and (abs(out[c*3+2]-G)<10) and (abs(out[c*3+3]-B)<10)) 
+        if ((abs(out[c*3+1]-R)<20) and (abs(out[c*3+2]-G)<20) and (abs(out[c*3+3]-B)<20)) 
         {
           c1=c+1;
-        }
-      }
-      if (Lt>15)
-      {
-        analogWrite(Sp,150);
-        delay(10);
-        if (c1==1) {
-          myServo.write(250);
-          delay(500);
-          c1=0;
-        }
-        if (c1==2) 
-        {
-          myServo.write(0);
-          delay(500);
-          c1=0;
-        }
-        if (c1==0) 
-        {
-        myServo.write(90);
-        delay(500);
+          Serial.println(";;;");Serial.print(c1);
         }
       }
     }
-    else{
-    Lt=0;
-    analogWrite(Sp,95);    
+    if ((skan and (Lt>=15)) or ((Lt==0) and !(skan))) {
+      analogWrite(Sp,105);
+      swap=true;
+      }
+      else swap=false;
+    if ((!swap) and (Lt>=15)) {
+      if (c1==2){
+        analogWrite(Sp,0);
+        myServo.write(0);
+        delay(200);
+        c1=0;        
+      }
+      if (c1==1){
+        analogWrite(Sp,0);
+        myServo.write(270);
+        delay(200);
+        c1=0;
+      }
     }
+    else myServo.write(90);
+    if (((Lt>=15) and !(swap)) or (((Lt<15) and (Lt>0)) and !(skan))) Lt=0;
   }
   else analogWrite(Sp,0);
 }
